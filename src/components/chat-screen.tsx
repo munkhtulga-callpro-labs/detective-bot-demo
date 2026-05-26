@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react"
+import { BookOpen } from "lucide-react"
 import { useGameSession } from "@/hooks/use-game-session"
 import { SceneImage } from "@/components/scene-image"
 import { ChatInput } from "@/components/chat-input"
 import { GameOverDialog } from "@/components/game-over-dialog"
+import { HistorySheet } from "@/components/history-sheet"
 import { Button } from "@/components/ui/button"
 
 const LOADING_HINTS = [
@@ -15,6 +17,7 @@ const LOADING_HINTS = [
 export function ChatScreen({ onQuit }: { onQuit: () => void }) {
   const { state, send, retry, reset, maxTurns } = useGameSession()
   const [gameOverOpen, setGameOverOpen] = useState(false)
+  const [historyOpen, setHistoryOpen] = useState(false)
   const [narrativeKey, setNarrativeKey] = useState(0)
   const [hintIndex, setHintIndex] = useState(0)
 
@@ -39,10 +42,22 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
 
   return (
     <div className="flex h-full w-full flex-col bg-noir-bg text-noir-cream">
-      <header className="flex items-center justify-between border-b border-noir-border bg-noir-surface/80 px-4 pb-3 pt-12 backdrop-blur-md md:pt-6">
-        <span className="font-serif text-sm tracking-wide text-noir-amber">
-          Асуулт {displayTurn} / {maxTurns}
-        </span>
+      <header className="flex items-center justify-between border-b border-noir-border bg-noir-surface/80 px-3 pb-3 pt-12 backdrop-blur-md md:pt-6">
+        <div className="flex items-center gap-2">
+          <Button
+            size="icon"
+            variant="ghost"
+            onClick={() => setHistoryOpen(true)}
+            disabled={state.history.length === 0}
+            aria-label="Хэргийн тэмдэглэл"
+            className="h-9 w-9 text-noir-cream/70 hover:bg-noir-amber/10 hover:text-noir-amber disabled:opacity-30"
+          >
+            <BookOpen className="h-4 w-4" />
+          </Button>
+          <span className="font-serif text-sm tracking-wide text-noir-amber">
+            Асуулт {displayTurn} / {maxTurns}
+          </span>
+        </div>
         <Button
           size="sm"
           variant="ghost"
@@ -111,6 +126,12 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
       <ChatInput
         disabled={state.isSending || state.gameOver}
         onSubmit={send}
+      />
+
+      <HistorySheet
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        history={state.history}
       />
 
       <GameOverDialog

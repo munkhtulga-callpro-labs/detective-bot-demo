@@ -3,12 +3,20 @@ import { fetchSceneImage, sendChat } from "@/lib/api"
 
 const MAX_TURNS = 15
 
+export type HistoryEntry = {
+  turn: number
+  query: string
+  narrative: string
+  imageUrl: string | null
+}
+
 type GameState = {
   sessionId: string
   turn: number
   turnsRemaining: number
   narrative: string | null
   imageUrl: string | null
+  history: HistoryEntry[]
   isSending: boolean
   error: string | null
   gameOver: boolean
@@ -21,25 +29,30 @@ const initialState = (): GameState => ({
   turnsRemaining: MAX_TURNS,
   narrative: null,
   imageUrl: null,
+  history: [],
   isSending: false,
   error: null,
   gameOver: false,
   isSolved: false,
 })
 
+const revokeHistoryImages = (history: HistoryEntry[]) => {
+  for (const entry of history) {
+    if (entry.imageUrl) URL.revokeObjectURL(entry.imageUrl)
+  }
+}
+
 export function useGameSession() {
   const [state, setState] = useState<GameState>(initialState)
   const lastQueryRef = useRef<string | null>(null)
-  const imageUrlRef = useRef<string | null>(null)
+  const historyRef = useRef<HistoryEntry[]>([])
 
   useEffect(() => {
-    imageUrlRef.current = state.imageUrl
-  }, [state.imageUrl])
+    historyRef.current = state.history
+  }, [state.history])
 
   useEffect(() => {
-    return () => {
-      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current)
-    }
+    return () => revokeHistoryImages(historyRef.current)
   }, [])
 
   const send = useCallback(
@@ -59,8 +72,15 @@ export function useGameSession() {
             console.error("image fetch failed", err)
           }
         }
+        const carriedImage = nextImageUrl
         setState((s) => {
-          if (nextImageUrl && s.imageUrl) URL.revokeObjectURL(s.imageUrl)
+          const imageUrl = carriedImage ?? s.imageUrl
+          const entry: HistoryEntry = {
+            turn: res.turn_number,
+            query: trimmed,
+            narrative: res.output,
+            imageUrl,
+          }
           return {
             ...s,
             narrative: res.output,
@@ -68,7 +88,8 @@ export function useGameSession() {
             turnsRemaining: res.turns_remaining,
             gameOver: res.game_over,
             isSolved: res.is_solved,
-            imageUrl: nextImageUrl ?? s.imageUrl,
+            imageUrl,
+            history: [...s.history, entry],
             isSending: false,
             error: null,
           }
@@ -90,7 +111,7 @@ export function useGameSession() {
   }, [send])
 
   const reset = useCallback(() => {
-    if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current)
+    revokeHistoryImages(historyRef.current)
     lastQueryRef.current = null
     setState(initialState())
   }, [])
