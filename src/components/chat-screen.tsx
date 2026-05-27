@@ -7,10 +7,12 @@ import { HistorySheet } from "@/components/history-sheet"
 import { Button } from "@/components/ui/button"
 
 const LOADING_HINTS = [
-  "Хэргийн газрыг шинж. Гэрчээс асуу. Мөрийг хөө.",
+  "Хэргийн газрыг шинж. Гэрчээс асуу. Цагийн дарааллыг угсар.",
   "Бэлэн болоод &ldquo;Би [нэр]-ийг буруутгаж байна&rdquo; гэж хэлээрэй.",
-  "Жижиг мэдээлэл ч чухал, мөрдөгчөө.",
-  "Зөн совиндоо итгэ &mdash; гэхдээ нотлох баримтыг шалга.",
+  "Нэг хүний хэлснийг нөгөөд нь тулгаж асуу.",
+  "Гэрч бүр зөвхөн өөрийн харсан, сонссон зүйлээ мэднэ.",
+  "Жижиг зөрүү том худлыг илчилж болно.",
+  "Зөн совиндоо итгэ &mdash; гэхдээ цаг, баримт хоёрыг тулга.",
 ]
 
 export function ChatScreen({ onQuit }: { onQuit: () => void }) {
@@ -42,7 +44,7 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
             <BookOpen className="h-4 w-4" />
           </Button>
           <span className="font-serif text-sm tracking-wide text-noir-amber">
-            Асуулт {displayTurn} / {maxTurns}
+            Алхам {displayTurn} / {maxTurns}
           </span>
         </div>
         <Button
@@ -61,11 +63,11 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
         {isLastTurn && !state.isSending && (
           <div className="mb-4 rounded-md border border-noir-amber/50 bg-noir-amber/10 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-noir-amber">
-              Сүүлийн асуулт
+              Сүүлийн алхам
             </p>
             <p className="mt-1 font-serif text-sm leading-6 text-noir-cream/85">
               Энэ бол 15 дахь, эцсийн боломж. Нотлох баримтаа нэгтгээд
-              буруутныг нэрлэхэд бэлдээрэй.
+              хэн юу мэдэж, юуг буруу ойлгосныг холбож буруутныг нэрлээрэй.
             </p>
           </div>
         )}
@@ -85,8 +87,8 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
               Хэрэг шинэхэн. Шөнө таных.
             </p>
             <p>
-              Юу хийхээ хэлээрэй, мөрдөгчөө &mdash; Хэргийн газрыг шинж, гэрчээс
-              асуу, эсвэл сэжгээ хөө.
+              Юу хийхээ хэлээрэй, мөрдөгчөө &mdash; хэргийн газрыг шинж, гэрчээс
+              асуу, эсвэл нэг хүний мэдүүлгийг нөгөөд нь тулга.
             </p>
           </div>
         )}

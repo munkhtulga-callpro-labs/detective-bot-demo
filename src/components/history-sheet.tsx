@@ -37,7 +37,7 @@ export function HistorySheet({
             Хэргийн тэмдэглэл
           </SheetTitle>
           <SheetDescription className="text-sm text-noir-cream/60">
-            Өнөөг хүртэлх асуулт, мөрдлөг.
+            Өнөөг хүртэлх алхам, мөрдлөг.
           </SheetDescription>
         </SheetHeader>
 
@@ -54,7 +54,7 @@ export function HistorySheet({
                   className="border-l-2 border-noir-amber/40 pl-3"
                 >
                   <p className="text-[10px] uppercase tracking-[0.3em] text-noir-amber/80">
-                    Асуулт {entry.turn}
+                    Алхам {entry.turn}
                   </p>
                   <p className="mt-1 wrap-break-word text-sm font-medium text-noir-cream">
                     &ldquo;{entry.query}&rdquo;
@@ -62,7 +62,7 @@ export function HistorySheet({
                   {entry.imageUrl && (
                     <img
                       src={entry.imageUrl}
-                      alt={`Асуулт ${entry.turn}`}
+                      alt={`Алхам ${entry.turn}`}
                       loading="lazy"
                       className="mt-3 aspect-video w-full rounded-md border border-noir-border object-cover"
                     />
