@@ -103,10 +103,7 @@ const tones = [
 ]
 
 const difficulties = [
-  "easy: clear clue trail with one major red herring",
-  "medium: several partial truths and two plausible motives",
   "hard: timeline reconstruction and motive separation are both required",
-  "expert: every suspect lies once, but only one lie changes the crime logic",
 ]
 
 const visualMoods = [
@@ -169,7 +166,7 @@ export function generateCaseSeed(): CaseSeed {
     twistType: pick(twistTypes),
     suspectWeb: pick(suspectWebs),
     tone: pick(tones),
-    difficulty: pick(difficulties),
+    difficulty: difficulties[0],
     visualMood: pick(visualMoods),
     forbiddenPatterns: pickMany(forbiddenPatternPool, 4),
   }

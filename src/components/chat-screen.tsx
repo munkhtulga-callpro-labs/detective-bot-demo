@@ -3,7 +3,6 @@ import { BookOpen } from "lucide-react"
 import { useGameSession } from "@/hooks/use-game-session"
 import { SceneImage } from "@/components/scene-image"
 import { ChatInput } from "@/components/chat-input"
-import { GameOverDialog } from "@/components/game-over-dialog"
 import { HistorySheet } from "@/components/history-sheet"
 import { Button } from "@/components/ui/button"
 
@@ -107,23 +106,35 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
         )}
       </div>
 
-      <ChatInput
-        disabled={state.isSending || state.gameOver}
-        onSubmit={send}
-      />
+      {state.gameOver ? (
+        <div className="border-t border-noir-border bg-noir-surface/80 px-4 py-3 backdrop-blur-md">
+          <p className="font-serif text-xs uppercase tracking-[0.24em] text-noir-amber">
+            {state.isSolved ? "Хэрэг тайлагдлаа" : "Хэрэг хөрсөн"}
+          </p>
+          <div className="mt-2 flex gap-2">
+            <Button
+              onClick={reset}
+              className="flex-1 bg-noir-amber text-noir-bg hover:bg-noir-amber-soft"
+            >
+              Шинэ хэрэг
+            </Button>
+            <Button
+              variant="outline"
+              onClick={onQuit}
+              className="flex-1 border-noir-border bg-transparent text-noir-cream hover:bg-noir-surface hover:text-noir-cream"
+            >
+              Гарах
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <ChatInput disabled={state.isSending} onSubmit={send} />
+      )}
 
       <HistorySheet
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         history={state.history}
-      />
-
-      <GameOverDialog
-        open={state.gameOver}
-        isSolved={state.isSolved}
-        imageUrl={state.imageUrl}
-        onNewCase={reset}
-        onClose={onQuit}
       />
     </div>
   )
