@@ -40,7 +40,7 @@ export function RulesDialog({
             <li>&ldquo;Би [нэр]-ийг буруутгаж байна&rdquo;</li>
           </ul>
           <p className="pt-2 font-serif italic text-noir-amber">
-            Амжилт хүсье, мөгдөгчөө.
+            Амжилт хүсье, мөрдөгчөө.
           </p>
         </div>
       </DialogContent>

@@ -1,4 +1,10 @@
+import {
+  crimeStorySeeds,
+  type CrimeStorySeed,
+} from "@/lib/crime-story-seeds"
+
 export type CaseSeed = {
+  crimeStory: CrimeStorySeed
   setting: string
   crimeType: string
   mysteryStructure: string
@@ -26,19 +32,6 @@ const settings = [
   "provincial hospital ward during a power outage",
 ]
 
-const crimeTypes = [
-  "poisoning disguised as food poisoning",
-  "locked-room murder with a staged suicide note",
-  "high-value theft that turns into a murder investigation",
-  "hit-and-run cover-up with a missing vehicle key",
-  "arson used to destroy one specific piece of evidence",
-  "blackmail victim found dead before a scheduled meeting",
-  "sabotage accident that was intentionally engineered",
-  "kidnapping hoax hiding a real disappearance",
-  "identity swap revealed through small behavioral mistakes",
-  "revenge killing hidden behind a business dispute",
-]
-
 const mysteryStructures = [
   "the obvious suspect has the cleanest motive but a false timeline",
   "three suspects share one secret, but only one benefits from the crime",
@@ -63,19 +56,6 @@ const clueStyles = [
   "food, medicine, and allergy details that narrow opportunity",
   "family photographs and old documents with one altered fact",
   "sound-based clues from walls, doors, engines, or music",
-]
-
-const twistTypes = [
-  "the victim knowingly protected someone who was not the killer",
-  "the apparent alibi was created before the crime happened",
-  "a witness tells the truth but about the wrong time",
-  "the murder weapon is not dangerous until combined with the setting",
-  "the motive is shame avoidance, not money or romance",
-  "the culprit is exposed by trying to correct an investigator's assumption",
-  "the hidden relationship is professional rather than romantic",
-  "the final reveal turns on why evidence was absent, not why it was present",
-  "a secondary crime explains the cover-up but not the death",
-  "the person with the strongest motive only discovered the body",
 ]
 
 const suspectWebs = [
@@ -140,7 +120,7 @@ function randomIndex(length: number): number {
   return array[0] % length
 }
 
-function pick(options: string[]): string {
+function pick<T>(options: T[]): T {
   return options[randomIndex(options.length)]
 }
 
@@ -157,17 +137,50 @@ function pickMany(options: string[], count: number): string[] {
   return selected
 }
 
+function pickForbiddenPatterns(crimeStory: CrimeStorySeed): string[] {
+  const premise = `${crimeStory.genre} ${crimeStory.title} ${crimeStory.premise} ${crimeStory.hiddenLogic}`.toLowerCase()
+  const compatiblePatterns = forbiddenPatternPool.filter((pattern) => {
+    if (
+      pattern.includes("supernatural") &&
+      crimeStory.genre === "Fantasy & Supernatural"
+    ) {
+      return false
+    }
+
+    if (
+      pattern.includes("identical twin") &&
+      /\b(clone|twin|lookalike|face-shifter|shapeshifter)\b/.test(premise)
+    ) {
+      return false
+    }
+
+    if (
+      pattern.includes("random stranger") &&
+      /\b(stranger|outsider)\b/.test(premise)
+    ) {
+      return false
+    }
+
+    return true
+  })
+
+  return pickMany(compatiblePatterns, 4)
+}
+
 export function generateCaseSeed(): CaseSeed {
+  const crimeStory = pick(crimeStorySeeds)
+
   return {
+    crimeStory,
     setting: pick(settings),
-    crimeType: pick(crimeTypes),
+    crimeType: crimeStory.premise,
     mysteryStructure: pick(mysteryStructures),
     clueStyle: pick(clueStyles),
-    twistType: pick(twistTypes),
+    twistType: crimeStory.hiddenLogic,
     suspectWeb: pick(suspectWebs),
     tone: pick(tones),
     difficulty: difficulties[0],
     visualMood: pick(visualMoods),
-    forbiddenPatterns: pickMany(forbiddenPatternPool, 4),
+    forbiddenPatterns: pickForbiddenPatterns(crimeStory),
   }
 }
