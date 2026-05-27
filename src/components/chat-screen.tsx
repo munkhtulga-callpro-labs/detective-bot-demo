@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { BookOpen } from "lucide-react"
 import { useGameSession } from "@/hooks/use-game-session"
 import { SceneImage } from "@/components/scene-image"
@@ -16,29 +16,17 @@ const LOADING_HINTS = [
 
 export function ChatScreen({ onQuit }: { onQuit: () => void }) {
   const { state, send, retry, reset, maxTurns } = useGameSession()
-  const [gameOverOpen, setGameOverOpen] = useState(false)
   const [historyOpen, setHistoryOpen] = useState(false)
-  const [narrativeKey, setNarrativeKey] = useState(0)
-  const [hintIndex, setHintIndex] = useState(0)
+  const autoStartedRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (state.gameOver) setGameOverOpen(true)
-  }, [state.gameOver])
-
-  useEffect(() => {
-    if (state.narrative) setNarrativeKey((k) => k + 1)
-  }, [state.narrative])
-
-  useEffect(() => {
-    if (!state.isSending) return
-    setHintIndex(Math.floor(Math.random() * LOADING_HINTS.length))
-    const id = setInterval(() => {
-      setHintIndex((i) => (i + 1) % LOADING_HINTS.length)
-    }, 3500)
-    return () => clearInterval(id)
-  }, [state.isSending])
+    if (autoStartedRef.current === state.sessionId) return
+    autoStartedRef.current = state.sessionId
+    void send("start")
+  }, [state.sessionId, send])
 
   const displayTurn = Math.min(state.turn || 1, maxTurns)
+  const isLastTurn = state.turnsRemaining === 1 && !state.gameOver
 
   return (
     <div className="flex h-full w-full flex-col bg-noir-bg text-noir-cream">
@@ -71,27 +59,23 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
       <SceneImage url={state.imageUrl} isLoading={state.isSending} />
 
       <div className="relative flex-1 overflow-y-auto px-5 py-5">
-        {state.isSending ? (
-          <div
-            key={hintIndex}
-            className="flex animate-[fadeUp_400ms_ease-out] flex-col items-center gap-4 pt-4 text-center"
-          >
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-noir-amber" />
-              <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_0.2s_infinite] rounded-full bg-noir-amber" />
-              <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_0.4s_infinite] rounded-full bg-noir-amber" />
-            </div>
-            <p className="text-[10px] uppercase tracking-[0.35em] text-noir-amber/80">
-              Мөрдөж байна
+        {isLastTurn && !state.isSending && (
+          <div className="mb-4 rounded-md border border-noir-amber/50 bg-noir-amber/10 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-noir-amber">
+              Сүүлийн асуулт
             </p>
-            <p
-              className="max-w-70 font-serif text-[15px] italic leading-[1.7] text-noir-cream/70"
-              dangerouslySetInnerHTML={{ __html: LOADING_HINTS[hintIndex] }}
-            />
+            <p className="mt-1 font-serif text-sm leading-6 text-noir-cream/85">
+              Энэ бол 15 дахь, эцсийн боломж. Нотлох баримтаа нэгтгээд
+              буруутныг нэрлэхэд бэлдээрэй.
+            </p>
           </div>
+        )}
+
+        {state.isSending ? (
+          <LoadingHints />
         ) : state.narrative ? (
           <p
-            key={narrativeKey}
+            key={state.turn}
             className="animate-[fadeUp_400ms_ease-out] font-serif text-[15px] leading-[1.7] text-noir-cream"
           >
             {state.narrative}
@@ -135,17 +119,44 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
       />
 
       <GameOverDialog
-        open={gameOverOpen}
+        open={state.gameOver}
         isSolved={state.isSolved}
         imageUrl={state.imageUrl}
-        onNewCase={() => {
-          setGameOverOpen(false)
-          reset()
-        }}
-        onClose={() => {
-          setGameOverOpen(false)
-          onQuit()
-        }}
+        onNewCase={reset}
+        onClose={onQuit}
+      />
+    </div>
+  )
+}
+
+function LoadingHints() {
+  const [hintIndex, setHintIndex] = useState(() =>
+    Math.floor(Math.random() * LOADING_HINTS.length),
+  )
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHintIndex((i) => (i + 1) % LOADING_HINTS.length)
+    }, 3500)
+    return () => clearInterval(id)
+  }, [])
+
+  return (
+    <div
+      key={hintIndex}
+      className="flex animate-[fadeUp_400ms_ease-out] flex-col items-center gap-4 pt-4 text-center"
+    >
+      <div className="flex items-center gap-1.5">
+        <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_infinite] rounded-full bg-noir-amber" />
+        <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_0.2s_infinite] rounded-full bg-noir-amber" />
+        <span className="h-2 w-2 animate-[pulse_1.2s_ease-in-out_0.4s_infinite] rounded-full bg-noir-amber" />
+      </div>
+      <p className="text-[10px] uppercase tracking-[0.35em] text-noir-amber/80">
+        Мөрдөж байна
+      </p>
+      <p
+        className="max-w-70 font-serif text-[15px] italic leading-[1.7] text-noir-cream/70"
+        dangerouslySetInnerHTML={{ __html: LOADING_HINTS[hintIndex] }}
       />
     </div>
   )

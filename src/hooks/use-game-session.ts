@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { fetchSceneImage, sendChat } from "@/lib/api"
+import { generateCaseSeed, type CaseSeed } from "@/lib/case-seeder"
 
 const MAX_TURNS = 15
 
@@ -12,6 +13,7 @@ export type HistoryEntry = {
 
 type GameState = {
   sessionId: string
+  caseSeed: CaseSeed
   turn: number
   turnsRemaining: number
   narrative: string | null
@@ -25,6 +27,7 @@ type GameState = {
 
 const initialState = (): GameState => ({
   sessionId: crypto.randomUUID(),
+  caseSeed: generateCaseSeed(),
   turn: 0,
   turnsRemaining: MAX_TURNS,
   narrative: null,
@@ -63,7 +66,7 @@ export function useGameSession() {
       setState((s) => ({ ...s, isSending: true, error: null }))
       try {
         const sessionId = state.sessionId
-        const res = await sendChat(sessionId, trimmed)
+        const res = await sendChat(sessionId, trimmed, state.caseSeed)
         let nextImageUrl: string | null = null
         if (res.image_generation_prompt) {
           try {
@@ -103,7 +106,7 @@ export function useGameSession() {
         }))
       }
     },
-    [state.sessionId],
+    [state.caseSeed, state.sessionId],
   )
 
   const retry = useCallback(() => {
