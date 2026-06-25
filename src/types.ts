@@ -6,4 +6,7 @@ export type ChatResponse = {
   is_solved: boolean
   game_over: boolean
   turns_remaining: number
+  // n8n attaches this on the outer wrapper; sendChat merges it in. Used to
+  // fetch per-turn chat token usage from the execution-detail endpoint.
+  execution_id?: string
 }

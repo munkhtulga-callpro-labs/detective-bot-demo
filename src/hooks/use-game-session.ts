@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { fetchSceneImage, sendChat } from "@/lib/api"
+import { fetchExecutionTokens, fetchSceneImage, sendChat } from "@/lib/api"
 import { generateCaseSeed, type CaseSeed } from "@/lib/case-seeder"
+import { addUsage, estimateCostUsd, ZERO_USAGE, type TokenUsage } from "@/lib/cost"
 
 const MAX_TURNS = 15
 
@@ -23,6 +24,8 @@ type GameState = {
   error: string | null
   gameOver: boolean
   isSolved: boolean
+  usage: TokenUsage
+  costUsd: number
 }
 
 const initialState = (): GameState => ({
@@ -37,6 +40,8 @@ const initialState = (): GameState => ({
   error: null,
   gameOver: false,
   isSolved: false,
+  usage: ZERO_USAGE,
+  costUsd: 0,
 })
 
 const revokeHistoryImages = (history: HistoryEntry[]) => {
@@ -67,17 +72,34 @@ export function useGameSession() {
       try {
         const sessionId = state.sessionId
         const res = await sendChat(sessionId, trimmed, state.caseSeed)
-        let nextImageUrl: string | null = null
-        if (res.image_generation_prompt) {
-          try {
-            nextImageUrl = await fetchSceneImage(res.image_generation_prompt)
-          } catch (err) {
-            console.error("image fetch failed", err)
-          }
+        // Image generation and the execution-detail token lookup are
+        // independent — run them together. Both failures are non-fatal: the
+        // turn still commits, image falls back to the previous one, and token
+        // usage just isn't added for that turn.
+        const [image, execTokens] = await Promise.all([
+          res.image_generation_prompt
+            ? fetchSceneImage(res.image_generation_prompt).catch((err) => {
+                console.error("image fetch failed", err)
+                return null
+              })
+            : Promise.resolve(null),
+          res.execution_id
+            ? fetchExecutionTokens(res.execution_id).catch((err) => {
+                console.error("execution token fetch failed", err)
+                return null
+              })
+            : Promise.resolve(null),
+        ])
+        const carriedImage = image?.url ?? null
+        const turnUsage: TokenUsage = {
+          chatInputTokens: execTokens?.promptTokens ?? 0,
+          chatOutputTokens: execTokens?.completionTokens ?? 0,
+          imageInputTokens: image?.inputTokens ?? 0,
+          imageOutputTokens: image?.outputTokens ?? 0,
         }
-        const carriedImage = nextImageUrl
         setState((s) => {
           const imageUrl = carriedImage ?? s.imageUrl
+          const usage = addUsage(s.usage, turnUsage)
           const entry: HistoryEntry = {
             turn: res.turn_number,
             query: trimmed,
@@ -95,6 +117,8 @@ export function useGameSession() {
             history: [...s.history, entry],
             isSending: false,
             error: null,
+            usage,
+            costUsd: estimateCostUsd(usage),
           }
         })
       } catch (err) {

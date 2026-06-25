@@ -15,6 +15,11 @@ const LOADING_HINTS = [
   "Зөн совиндоо итгэ &mdash; гэхдээ цаг, баримт хоёрыг тулга.",
 ]
 
+// Cost breakdown only renders when ?showCost is in the URL (dev/debug).
+const SHOW_COST =
+  typeof window !== "undefined" &&
+  new URLSearchParams(window.location.search).has("showCost")
+
 export function ChatScreen({ onQuit }: { onQuit: () => void }) {
   const { state, send, retry, reset, maxTurns } = useGameSession()
   const [historyOpen, setHistoryOpen] = useState(false)
@@ -137,6 +142,9 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
         open={historyOpen}
         onOpenChange={setHistoryOpen}
         history={state.history}
+        cost={
+          SHOW_COST ? { usage: state.usage, costUsd: state.costUsd } : undefined
+        }
       />
     </div>
   )

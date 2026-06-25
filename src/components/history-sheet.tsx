@@ -6,15 +6,18 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import type { HistoryEntry } from "@/hooks/use-game-session"
+import type { TokenUsage } from "@/lib/cost"
 
 export function HistorySheet({
   open,
   onOpenChange,
   history,
+  cost,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   history: HistoryEntry[]
+  cost?: { usage: TokenUsage; costUsd: number }
 }) {
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -42,6 +45,7 @@ export function HistorySheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+          {cost && <CostSummary usage={cost.usage} costUsd={cost.costUsd} />}
           {history.length === 0 ? (
             <p className="pt-10 text-center font-serif text-sm italic text-noir-cream/50">
               Тэмдэглэл хоосон байна.
@@ -77,5 +81,46 @@ export function HistorySheet({
         </div>
       </SheetContent>
     </Sheet>
+  )
+}
+
+function CostSummary({
+  usage,
+  costUsd,
+}: {
+  usage: TokenUsage
+  costUsd: number
+}) {
+  const chatTokens = usage.chatInputTokens + usage.chatOutputTokens
+  const imageTokens = usage.imageInputTokens + usage.imageOutputTokens
+  const rows: [string, string][] = [
+    [
+      "Чат (gpt-5.4-mini)",
+      `${chatTokens.toLocaleString()} ток · ${usage.chatInputTokens.toLocaleString()} in / ${usage.chatOutputTokens.toLocaleString()} out`,
+    ],
+    [
+      "Зураг (gpt-image-1-mini)",
+      `${imageTokens.toLocaleString()} ток · ${usage.imageInputTokens.toLocaleString()} in / ${usage.imageOutputTokens.toLocaleString()} out`,
+    ],
+  ]
+  return (
+    <div className="mb-6 rounded-lg border border-noir-border bg-noir-surface/40 p-3">
+      <div className="flex items-baseline justify-between">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-noir-amber/80">
+          Зардлын тооцоо
+        </p>
+        <p className="font-mono text-sm text-noir-amber">
+          ${costUsd.toFixed(4)}
+        </p>
+      </div>
+      <dl className="mt-2 space-y-1">
+        {rows.map(([label, value]) => (
+          <div key={label} className="flex justify-between gap-3 text-xs">
+            <dt className="text-noir-cream/60">{label}</dt>
+            <dd className="text-right font-mono text-noir-cream/80">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   )
 }
