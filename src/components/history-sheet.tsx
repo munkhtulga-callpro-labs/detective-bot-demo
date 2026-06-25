@@ -6,7 +6,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import type { HistoryEntry } from "@/hooks/use-game-session"
-import type { TokenUsage } from "@/lib/cost"
+import { estimateCostUsd, type TokenUsage } from "@/lib/cost"
 
 export function HistorySheet({
   open,
@@ -45,7 +45,13 @@ export function HistorySheet({
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-          {cost && <CostSummary usage={cost.usage} costUsd={cost.costUsd} />}
+          {cost && (
+            <CostSummary
+              label="Нийт зардал"
+              usage={cost.usage}
+              costUsd={cost.costUsd}
+            />
+          )}
           {history.length === 0 ? (
             <p className="pt-10 text-center font-serif text-sm italic text-noir-cream/50">
               Тэмдэглэл хоосон байна.
@@ -74,6 +80,7 @@ export function HistorySheet({
                   <p className="mt-3 wrap-break-word font-serif text-[14px] leading-[1.7] text-noir-cream/80">
                     {entry.narrative}
                   </p>
+                  {cost && <TurnCost usage={entry.usage} />}
                 </li>
               ))}
             </ol>
@@ -84,10 +91,27 @@ export function HistorySheet({
   )
 }
 
+function TurnCost({ usage }: { usage: TokenUsage }) {
+  const chatTokens = usage.chatInputTokens + usage.chatOutputTokens
+  const imageTokens = usage.imageInputTokens + usage.imageOutputTokens
+  const costUsd = estimateCostUsd(usage)
+  return (
+    <div className="mt-3 flex items-center justify-between border-t border-noir-border/60 pt-2 text-[11px]">
+      <span className="text-noir-cream/45">
+        Чат {chatTokens.toLocaleString()} · Зураг {imageTokens.toLocaleString()}{" "}
+        ток
+      </span>
+      <span className="font-mono text-noir-amber/90">${costUsd.toFixed(4)}</span>
+    </div>
+  )
+}
+
 function CostSummary({
+  label,
   usage,
   costUsd,
 }: {
+  label: string
   usage: TokenUsage
   costUsd: number
 }) {
@@ -107,7 +131,7 @@ function CostSummary({
     <div className="mb-6 rounded-lg border border-noir-border bg-noir-surface/40 p-3">
       <div className="flex items-baseline justify-between">
         <p className="text-[10px] uppercase tracking-[0.3em] text-noir-amber/80">
-          Зардлын тооцоо
+          {label}
         </p>
         <p className="font-mono text-sm text-noir-amber">
           ${costUsd.toFixed(4)}

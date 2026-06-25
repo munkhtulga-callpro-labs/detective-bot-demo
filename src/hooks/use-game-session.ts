@@ -10,6 +10,7 @@ export type HistoryEntry = {
   query: string
   narrative: string
   imageUrl: string | null
+  usage: TokenUsage
 }
 
 type GameState = {
@@ -105,6 +106,7 @@ export function useGameSession() {
             query: trimmed,
             narrative: res.output,
             imageUrl,
+            usage: turnUsage,
           }
           return {
             ...s,
