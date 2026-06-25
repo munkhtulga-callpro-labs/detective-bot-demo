@@ -115,17 +115,19 @@ function CostSummary({
   usage: TokenUsage
   costUsd: number
 }) {
-  const chatTokens = usage.chatInputTokens + usage.chatOutputTokens
-  const imageTokens = usage.imageInputTokens + usage.imageOutputTokens
+  const chatCostUsd = estimateCostUsd({
+    ...usage,
+    imageInputTokens: 0,
+    imageOutputTokens: 0,
+  })
+  const imageCostUsd = estimateCostUsd({
+    ...usage,
+    chatInputTokens: 0,
+    chatOutputTokens: 0,
+  })
   const rows: [string, string][] = [
-    [
-      "Чат (gpt-5.4-mini)",
-      `${chatTokens.toLocaleString()} ток · ${usage.chatInputTokens.toLocaleString()} in / ${usage.chatOutputTokens.toLocaleString()} out`,
-    ],
-    [
-      "Зураг (gpt-image-1-mini)",
-      `${imageTokens.toLocaleString()} ток · ${usage.imageInputTokens.toLocaleString()} in / ${usage.imageOutputTokens.toLocaleString()} out`,
-    ],
+    ["Чат", `$${chatCostUsd.toFixed(4)}`],
+    ["Зураг", `$${imageCostUsd.toFixed(4)}`],
   ]
   return (
     <div className="mb-6 rounded-lg border border-noir-border bg-noir-surface/40 p-3">

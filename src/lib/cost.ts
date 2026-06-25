@@ -1,7 +1,7 @@
 // Token accounting + cost estimation for a game session.
 //
 // Two Azure OpenAI models are billed:
-//   - chat:  gpt-5.4-mini      (the n8n detective agent + any sub-agents)
+//   - chat:  gpt-5.4-nano      (the n8n detective agent + any sub-agents)
 //   - image: gpt-image-1-mini  (scene image generation)
 //
 // Chat token usage is read from the n8n execution-detail endpoint (summed
@@ -24,16 +24,16 @@ export const ZERO_USAGE: TokenUsage = {
 
 // ─── PRICING ────────────────────────────────────────────────────────────────
 // USD per 1,000,000 tokens (Azure OpenAI).
-// NOTE: cached-input discounts (chat $0.08/1M, image text $0.20/1M, image
+// NOTE: cached-input discounts (chat $0.02/1M, image text $0.20/1M, image
 // image-input $0.25/1M) are NOT applied — neither the execution-detail
 // endpoint nor the image response breaks out cached vs uncached tokens, so we
 // price everything at the standard (uncached) rate. This slightly overestimates
 // cost when prompt caching kicks in.
 const PRICING = {
   chat: {
-    // gpt-5.4-mini
-    input: 0.75, // standard input
-    output: 4.5, // standard output
+    // gpt-5.4-nano
+    input: 0.2, // standard input
+    output: 1.25, // standard output
   },
   image: {
     // gpt-image-1-mini — input_tokens are text input; output_tokens are image
