@@ -21,7 +21,7 @@ const SHOW_COST =
   new URLSearchParams(window.location.search).has("showCost")
 
 export function ChatScreen({ onQuit }: { onQuit: () => void }) {
-  const { state, send, retry, reset, maxTurns } = useGameSession()
+  const { state, send, retry, reset, maxTurns } = useGameSession({ trackCost: SHOW_COST })
   const [historyOpen, setHistoryOpen] = useState(false)
   const autoStartedRef = useRef<string | null>(null)
 
@@ -33,6 +33,7 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
 
   const displayTurn = Math.min(state.turn || 1, maxTurns)
   const isLastTurn = state.turnsRemaining === 1 && !state.gameOver
+  const isNarrativeLoading = state.narrativeStatus === "loading"
 
   return (
     <div className="flex h-full w-full flex-col bg-noir-bg text-noir-cream">
@@ -62,10 +63,10 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
         </Button>
       </header>
 
-      <SceneImage url={state.imageUrl} isLoading={state.isSending} />
+      <SceneImage url={state.imageUrl} isLoading={state.imageStatus === "loading"} />
 
       <div className="relative flex-1 overflow-y-auto px-5 py-5">
-        {isLastTurn && !state.isSending && (
+        {isLastTurn && !isNarrativeLoading && (
           <div className="mb-4 rounded-md border border-noir-amber/50 bg-noir-amber/10 p-3">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-noir-amber">
               Сүүлийн алхам
@@ -77,7 +78,7 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
           </div>
         )}
 
-        {state.isSending ? (
+        {isNarrativeLoading ? (
           <LoadingHints />
         ) : state.narrative ? (
           <p
@@ -98,7 +99,7 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
           </div>
         )}
 
-        {state.error && !state.isSending && (
+        {state.error && !isNarrativeLoading && (
           <div className="mt-4 rounded-md border border-noir-danger/40 bg-noir-danger/10 p-3">
             <p className="text-sm text-noir-cream/90">{state.error}</p>
             <Button
@@ -135,7 +136,7 @@ export function ChatScreen({ onQuit }: { onQuit: () => void }) {
           </div>
         </div>
       ) : (
-        <ChatInput disabled={state.isSending} onSubmit={send} />
+        <ChatInput disabled={isNarrativeLoading} onSubmit={send} />
       )}
 
       <HistorySheet

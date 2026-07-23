@@ -1,3 +1,5 @@
+export type LoadStatus = "idle" | "loading" | "error"
+
 export type ChatResponse = {
   output: string
   image_generation_prompt: string

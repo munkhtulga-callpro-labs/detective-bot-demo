@@ -11,12 +11,15 @@ const EXECUTION_URL =
 export async function sendChat(
   sessionId: string,
   query: string,
-  caseSeed: CaseSeed,
+  caseSeed?: CaseSeed,
+  signal?: AbortSignal,
 ): Promise<ChatResponse> {
+  const body = caseSeed ? { sessionId, query, caseSeed } : { sessionId, query }
   const res = await fetch(CHAT_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, query, caseSeed }),
+    body: JSON.stringify(body),
+    signal,
   })
   if (!res.ok) throw new Error(`chat ${res.status}`)
   const data = await res.json()
@@ -51,11 +54,15 @@ function b64ToBlob(b64: string, mime: string): Blob {
   return new Blob([bytes], { type: mime })
 }
 
-export async function fetchSceneImage(prompt: string): Promise<SceneImage> {
+export async function fetchSceneImage(
+  prompt: string,
+  signal?: AbortSignal,
+): Promise<SceneImage> {
   const res = await fetch(IMAGE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ image_generation_prompt: prompt }),
+    signal,
   })
   if (!res.ok) throw new Error(`image ${res.status}`)
   // The endpoint now returns JSON (OpenAI-style) instead of a binary PNG:
@@ -83,8 +90,11 @@ type ExecutionDetail = {
 
 export async function fetchExecutionTokens(
   executionId: string,
+  signal?: AbortSignal,
 ): Promise<{ promptTokens: number; completionTokens: number }> {
-  const res = await fetch(`${EXECUTION_URL}?id=${encodeURIComponent(executionId)}`)
+  const res = await fetch(`${EXECUTION_URL}?id=${encodeURIComponent(executionId)}`, {
+    signal,
+  })
   if (!res.ok) throw new Error(`execution ${res.status}`)
   const data = (await res.json()) as ExecutionDetail[] | ExecutionDetail
   const item = Array.isArray(data) ? data[0] : data
